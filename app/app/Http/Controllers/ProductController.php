@@ -107,4 +107,32 @@ class ProductController extends Controller
         return redirect()->route('products.index')
                         ->with('success','Product deleted successfully');
     }
+
+    public function getUsersKey(){
+
+        $client = new \GuzzleHttp\Client();
+        $res = $client->request('POST', 'http://localhost:8000/oauth/token', [
+    'json' => ['username' => 'juan-so174@hotmail.com',
+    'password' => '123456',
+    'grant_type' => 'password',
+    'client_id' => '2',
+    'client_secret' => 'GkPfFDVDv6wjkQB6J83KZxmrc7PCrmL5p7I9XKJz',]]);
+        $stream = $res->getBody();
+        $contents = $stream->getContents();
+        $validate=(json_decode($contents , true));
+        return $validate['access_token']; 
+
+    }
+    public function getProductsApi(){
+        $token = $this->getUsersKey();
+        $client = new \GuzzleHttp\Client();
+        $res = $client->request('GET', 'http://localhost:8000/api/products', [
+            'headers' => ['Authorization' => 'Bearer '.$token, 
+                                'Accept' => 'application/json']]);
+            $stream = $res->getBody();
+            $contents = $stream->getContents();
+            $products=(json_decode($contents , true));
+            return $products; 
+    }
+
 }

@@ -14,7 +14,12 @@
 Route::get('/', function () {
     return view('welcome');
 });
-
+Route::post('productkey', 'ProductController@getProducts');
 Route::resource('products','ProductController');
 Route::resource('helicopters','HelicopterController');
 Route::resource('aeropuertos','AeropuertoController');
+Route::resource('productsAPI','ProductAPIController');
+
+
+Route::get('getproducts', 'ProductController@getProductsApi');
+
