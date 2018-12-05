@@ -123,16 +123,5 @@ class ProductController extends Controller
         return $validate['access_token']; 
 
     }
-    public function getProductsApi(){
-        $token = $this->getUsersKey();
-        $client = new \GuzzleHttp\Client();
-        $res = $client->request('GET', 'http://localhost:8000/api/products', [
-            'headers' => ['Authorization' => 'Bearer '.$token, 
-                                'Accept' => 'application/json']]);
-            $stream = $res->getBody();
-            $contents = $stream->getContents();
-            $products=(json_decode($contents , true));
-            return $products; 
-    }
 
 }

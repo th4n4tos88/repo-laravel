@@ -23,7 +23,8 @@ class ProductAPIController extends Controller
             $contents = $stream->getContents();
             $productsResponse=(json_decode($contents , true));
             $products=$productsResponse['data'];
-        return view('productsAPI.index',compact('products'));
+        return view('productsAPI.index',compact('products'))
+            ->with('i', (request()->input('page', 1) - 1) * 5);
     }
 
     /**
@@ -33,7 +34,9 @@ class ProductAPIController extends Controller
      */
     public function create()
     {
-        //
+        return view('productsAPI.create');
+
+        
     }
 
     /**
@@ -44,7 +47,21 @@ class ProductAPIController extends Controller
      */
     public function store(Request $request)
     {
-        //
+
+        $token = $this->getUsersKey();
+        $client = new \GuzzleHttp\Client();
+        $res = $client->request('POST', 'http://localhost:8000/api/products', [
+            'headers' => ['Authorization' => 'Bearer '.$token, 
+            'Accept'  => 'application/json'],
+            'json'    => [
+                          'name' => $request->name,
+                          'detail' => $request->detail
+                         ]
+
+            ]);
+   
+        return redirect()->route('productsAPI.index')
+                         ->with('success','Product created successfully.');
     }
 
     /**
@@ -53,9 +70,12 @@ class ProductAPIController extends Controller
      * @param  \App\ProductAPI  $productAPI
      * @return \Illuminate\Http\Response
      */
-    public function show(ProductAPI $productAPI)
+    public function show(Request $request)
     {
-        //
+        $productAPI = $this->requestProductWithId($request->segment(2));
+
+        return view('productsAPI.show',compact('productAPI'));
+
     }
 
     /**
@@ -64,10 +84,14 @@ class ProductAPIController extends Controller
      * @param  \App\ProductAPI  $productAPI
      * @return \Illuminate\Http\Response
      */
-    public function edit(ProductAPI $productAPI)
-    {
-        //
-    }
+    public function edit(Request $request)
+   {
+       
+       $productAPI = $this->requestProductWithId($request->segment(2));
+
+       return view('productsAPI.edit',compact('productAPI'));
+
+   }
 
     /**
      * Update the specified resource in storage.
@@ -78,7 +102,24 @@ class ProductAPIController extends Controller
      */
     public function update(Request $request, ProductAPI $productAPI)
     {
-        //
+        $request->validate([
+            'name' => 'required',
+            'detail' => 'required',
+        ]);
+        $token = $this->getUsersKey();
+        $client = new \GuzzleHttp\Client();
+        $res = $client->request('PUT', 'http://localhost:8000/api/products/'.$request->segment(2), [
+            'headers' => ['Authorization' => 'Bearer '.$token, 
+            'Accept'  => 'application/json'],
+            'json'    => [
+                          'name' => $request->name,
+                          'detail' => $request->detail
+                         ]
+
+            ]);
+  
+        return redirect()->route('productsAPI.index')
+                        ->with('success','Product updated successfully');
     }
 
     /**
@@ -87,9 +128,20 @@ class ProductAPIController extends Controller
      * @param  \App\ProductAPI  $productAPI
      * @return \Illuminate\Http\Response
      */
-    public function destroy(ProductAPI $productAPI)
+    public function destroy(Request $request)
     {
-        //
+
+        
+            $token = $this->getUsersKey();
+            $client = new \GuzzleHttp\Client();
+            $res = $client->request('DELETE', 'http://localhost:8000/api/products/'.$request->segment(2), [
+                'headers' => ['Authorization' => 'Bearer '.$token, 
+                'Accept'  => 'application/json'],
+                ]);
+       
+                return redirect()->route('productsAPI.index')
+                ->with('success','Product deleted successfully');
+        
     }
     public function getUsersKey(){
 
@@ -105,5 +157,24 @@ class ProductAPIController extends Controller
         $validate=(json_decode($contents , true));
         return $validate['access_token']; 
 
+    }
+    public function requestProductWithId($id){
+        
+
+        $token=$this->getUsersKey();
+
+        //request the product with id
+        $client2 = new \GuzzleHttp\Client();
+       $res=$client2->request('GET', 'http://localhost:8000/api/products/'.$id, [
+       'headers' => [
+       'Authorization' => 'Bearer '.$token,
+       'Accept'     => 'application/json'],
+       ]);
+
+
+   $contents =$res->getBody();
+   $arrayData=(json_decode($contents , true));
+   $productAPI = $arrayData['data'];
+   return $productAPI;
     }
 }
